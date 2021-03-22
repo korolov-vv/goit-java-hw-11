@@ -11,6 +11,6 @@ public class Test {
 
 
         System.out.println("\n");
-        new Exercise1().secondsHandler(10);
+        new Exercise1().secondsHandler(11);
     }
 }

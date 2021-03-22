@@ -4,39 +4,45 @@ public class Exercise1 {
 
     public void secondsHandler(int timeInSec) {
         Thread thr1 = new Thread(() -> {
-
-            makePause(1000);
-            while (secondsFromStart < timeInSec) {
-                synchronized (MONITOR) {
-                    secondsFromStart++;
-                    if (secondsFromStart % 5 != 0) {
-                        System.out.printf("%d seconds have passed from start of the session\n", secondsFromStart);
-                    }else {
-                        MONITOR.notifyAll();
-                        monitorWait();
-                    }
-                }
+            while (secondsFromStart <= timeInSec) {
                 makePause(1000);
+                synchronized (MONITOR) {
+                    if (secondsFromStart == 0) {
+                        System.out.println("Session is started!!!");
+                    } else {
+                        System.out.printf("%d seconds have passed from start of the session\n", secondsFromStart);
+                        if (secondsFromStart % 5 == 0) {
+                            MONITOR.notifyAll();
+                            monitorWait(1000);
+                        }
+                    }
+                    secondsFromStart++;
+                }
             }
         });
 
         Thread thr2 = new Thread(() -> {
             while (thr1.isAlive()) {
                 synchronized (MONITOR) {
-                    if (secondsFromStart == 0){
-                        System.out.println("Session is started!!!");
+                    if (secondsFromStart == 0) {
                         MONITOR.notifyAll();
-                        monitorWait();
-                    }else
-                    if (secondsFromStart % 5 == 0 && secondsFromStart != timeInSec) {
+                        monitorWait(10000);
+                    } else if (secondsFromStart % 5 == 0 && secondsFromStart != timeInSec) {
                         System.out.println("5 seconds have passed");
                         MONITOR.notifyAll();
-                        monitorWait();
-                    }else if(secondsFromStart == timeInSec){
+                        monitorWait(6000);
+                    } else if (secondsFromStart % 5 == 0 && secondsFromStart == timeInSec) {
+                        System.out.println("5 seconds have passed");
                         MONITOR.notifyAll();
+                        try {
+                            MONITOR.wait(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
+            System.out.println("The session is finished");
         });
 
         thr1.start();
@@ -52,9 +58,9 @@ public class Exercise1 {
         }
     }
 
-    public void monitorWait() {
+    public void monitorWait(int time) {
         try {
-            MONITOR.wait();
+            MONITOR.wait(time);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
